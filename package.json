@@ -1,0 +1,13 @@
+{
+  "name": "copal-launcher",
+  "version": "0.1.0",
+  "main": "build/backend/launcher.js",
+  "dependencies": {
+    "react": "^0.13.0"
+  },
+  "devDependencies": {
+    "gulp": "^3.8.11",
+    "gulp-babel": "^4.0.0",
+    "gulp-util": "^3.0.4"
+  }
+}
