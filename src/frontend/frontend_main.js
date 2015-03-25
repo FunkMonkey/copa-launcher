@@ -7,6 +7,6 @@
 // };
 
 React.render(
-  <CopalMain />,
-  document.getElementById("content")
+  <CopalMain className="copal-main" />,
+  document.querySelector(".copal-content")
 );

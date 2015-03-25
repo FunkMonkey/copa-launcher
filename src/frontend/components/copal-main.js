@@ -51,9 +51,15 @@ var CopalMain = React.createClass({
 
   render() {
     return (
-      <div>
-        <CopalInput onChange={this.onInputChange} />
-        <CopalViewList items={this.state.listData} onItemExecute={this.onItemExecute} />
+      <div className={this.props.className}>
+        <div className="copal-main-settings-button">...</div>
+        <div className="copal-main-top-row copal-dark-box">
+          <button className="copal-main-command">Command</button>
+          <CopalInput className="copal-main-input" onChange={this.onInputChange} />
+        </div>
+        <div className="copal-main-resultbox copal-dark-box">
+          <CopalViewList items={this.state.listData} onItemExecute={this.onItemExecute} />
+        </div>
       </div>
     );
   }

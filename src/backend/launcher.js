@@ -19,12 +19,11 @@ export default {
 
   createLauncherWindow() {
     this.launcherWindow = null;
-    this.launcherWindow = new BrowserWindow({ width: 1024,
-                                    height: 1000,
-                                    "node-integration": "manual-enable-iframe",
-                                    "web-preferences": {
-                                     "web-security": false
-                                    } });
+    this.launcherWindow = new BrowserWindow({ width: 500,
+                                              height: 300,
+                                              "node-integration": "manual-enable-iframe",
+                                              frame: false,
+                                              transparent: true });
 
 
     this.launcherWindow.loadUrl("file://" + __dirname + "/../../view/index.html");

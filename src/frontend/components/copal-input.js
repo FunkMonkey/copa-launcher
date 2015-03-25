@@ -5,9 +5,10 @@ var CopalInput = React.createClass({
     this.props.onChange( value );
   },
 
+  // TODO: classnames
   render() {
     return (
-      <input type="edit" ref="input" class="copal-input" onChange={this.onChange} />
+      <input type="edit" ref="input" className={this.props.className} onChange={this.onChange} />
     );
   }
 });
