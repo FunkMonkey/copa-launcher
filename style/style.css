@@ -19,6 +19,7 @@ body {
 	display: flex;
 	color: #C6C6C6;
 	font-family: sans-serif;
+	-webkit-app-region: drag;
 }
 
 .copal-content {
@@ -39,6 +40,8 @@ body {
 
 	/* as child */
 	flex-grow: 1;
+
+	-webkit-app-region: no-drag;
 }
 
 .copal-main-settings-button {
