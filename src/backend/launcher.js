@@ -56,11 +56,11 @@ export default {
       commandSession: commandSession,
 
       dispatchInput( query ) {
-        this.commandSession.getSignal( "input" ).dispatch( this.commandSession, query );
+        this.commandSession.getSignal( "input" ).dispatch( query );
       },
 
       dispatchSignal( signalName, datatype, signalData ) {
-        this.commandSession.getSignal( signalName ).dispatch( this.commandSession, datatype, signalData );
+        this.commandSession.getSignal( signalName ).dispatch( datatype, signalData );
       }
     };
   },
