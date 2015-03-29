@@ -4,6 +4,7 @@
   "main": "build/backend/launcher.js",
   "dependencies": {
     "classnames": "^1.2.0",
+    "keycode": "^2.0.0",
     "react": "^0.13.0"
   },
   "devDependencies": {

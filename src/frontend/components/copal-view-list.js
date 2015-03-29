@@ -5,8 +5,19 @@ import ReactComponentsListSelect from "react-components-list-select";
 
 export default class CopalViewList extends React.Component {
 
+  constructor( props ) {
+    super( props );
+
+    this.state = {
+    };
+  }
+
   onItemExecute( index ) {
     this.props.onItemExecute( this.props.items[index] );
+  }
+
+  selectFirst() {
+    this.refs.list._selectIndex( 0 );
   }
 
   render() {
@@ -22,9 +33,11 @@ export default class CopalViewList extends React.Component {
     });
 
     return (
-      <ReactComponentsListSelect className="copal-view-list"
-           onItemExecute={this.onItemExecute.bind(this)}
-           tabIndex="1" >
+      <ReactComponentsListSelect
+          ref="list"
+          className="copal-view-list"
+          tabIndex="1"
+          onItemExecute={this.onItemExecute.bind(this)} >
         {items}
       </ReactComponentsListSelect>
     );

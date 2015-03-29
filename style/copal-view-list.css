@@ -6,6 +6,6 @@
 	cursor: pointer;
 }
 
-.copal-view-list > .react-components-list-select-item.is-focused {
+.copal-view-list > .react-components-list-select-item.is-selected {
 	background-color: #3A87AD;
 }

@@ -49,8 +49,10 @@ export default {
 
       commandSession: commandSession,
 
-      dispatchInput( query ) {
-        this.commandSession.getSignal( "input" ).dispatch( query );
+      dispatchInput( queryString ) {
+        var queryObj = Object.create( this.commandSession.query );
+        queryObj.queryString = queryString;
+        this.commandSession.getSignal( "input" ).dispatch( queryObj );
       },
 
       dispatchSignal( signalName, datatype, signalData ) {
