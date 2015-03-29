@@ -3,6 +3,7 @@
   "version": "0.1.0",
   "main": "build/backend/launcher.js",
   "dependencies": {
+    "classnames": "^1.2.0",
     "react": "^0.13.0"
   },
   "devDependencies": {

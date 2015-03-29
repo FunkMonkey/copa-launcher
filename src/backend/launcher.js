@@ -36,14 +36,8 @@ export default {
   },
 
   input: function ( commandSession ) {
-    console.log( "input initialized" );
-
     if( !this.getIPCSession( commandSession ) )
       this.createIPCSession( commandSession );
-
-      // setTimeout( function ( ) {
-      //   onInput( "Foobar" );
-      // }, 5000 );
   },
 
   getIPCSession( commandSession ) {

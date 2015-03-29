@@ -1,10 +1,10 @@
+
 // require('remote').getGlobal('sharedObject').message("some fuzzy message");
+import React from "react";
 
+// TODO: make view part of build-process, so we don't have 'build' here
+import CopalMain from "../build/frontend/components/copal-main";
 
-
-// var data = {
-//   items: ["The whole part", "Some weird movie", "The Last of us"]
-// };
 
 React.render(
   <CopalMain className="copal-main" />,

@@ -1,7 +1,11 @@
-var remote = require("remote");
-var ipc = require("ipc");
+import remote from "remote";
+import ipc from "ipc";
 
-var CopalMain = React.createClass({
+import React from "react";
+import CopalInput from "./copal-input";
+import CopalViewList from "./copal-view-list";
+
+export default React.createClass({
 
   query: "",
   data: [],
@@ -17,6 +21,10 @@ var CopalMain = React.createClass({
       this.currSessionID = sessionID;
       this.onDataChange( data );
     });
+  },
+
+  componentDidMount() {
+    // React.findDOMNode( this.refs.list.focus() );
   },
 
   getInitialState() {
@@ -58,7 +66,7 @@ var CopalMain = React.createClass({
           <CopalInput className="copal-main-input" onChange={this.onInputChange} />
         </div>
         <div className="copal-main-resultbox copal-dark-box">
-          <CopalViewList items={this.state.listData} onItemExecute={this.onItemExecute} />
+          <CopalViewList ref="list" items={this.state.listData} onItemExecute={this.onItemExecute} />
         </div>
       </div>
     );

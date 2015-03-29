@@ -1,4 +1,6 @@
-var CopalInput = React.createClass({
+import React from "react";
+
+export default React.createClass({
 
   onChange() {
     var value = React.findDOMNode(this.refs.input).value.trim();

@@ -1,0 +1,11 @@
+.copal-view-list:focus {
+	outline: 0;
+}
+
+.copal-view-list > .react-components-list-select-item {
+	cursor: pointer;
+}
+
+.copal-view-list > .react-components-list-select-item.is-focused {
+	background-color: #3A87AD;
+}

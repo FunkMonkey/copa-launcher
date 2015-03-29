@@ -5,7 +5,7 @@
 	},
 	"rules": {
 		"global-strict": false,
-		"curly": [2, "multi"]
+		"curly": false
 	},
 	"ecmaFeatures": {
 		"arrowFunctions": true,
