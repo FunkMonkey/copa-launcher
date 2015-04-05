@@ -13,7 +13,7 @@ export default {
     // TODO: don't create the window in init
     this.createLauncherWindow();
     this.launcherWindow.webContents.on("did-finish-load", () => {
-        copal.executeCommand("test");
+        copal.executeCommand("commands");
       });
   },
 
@@ -45,12 +45,23 @@ export default {
   },
 
   createIPCSession( commandSession ) {
+
+    // destruction is important
+    commandSession.getSignal("destroy").add( commandSession => {
+      this.getIPCSession( commandSession ).destroy();
+      delete launcherData.commandSessions[commandSession.sessionID];
+    } );
+
     launcherData.commandSessions[ commandSession.sessionID ] = {
 
       commandSession: commandSession,
 
+      destroy() {
+      },
+
       dispatchInput( queryString ) {
-        var queryObj = Object.create( this.commandSession.query );
+        // using the original query as a prototype, so we don't lose any other query information
+        var queryObj = Object.create( this.commandSession.initialData );
         queryObj.queryString = queryString;
         this.commandSession.getSignal( "input" ).dispatch( queryObj );
       },
