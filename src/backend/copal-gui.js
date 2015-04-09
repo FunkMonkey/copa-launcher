@@ -112,7 +112,7 @@ export default {
     if( !this.getIPCSession( commandSession ) )
       this.createIPCSession( commandSession );
 
-    this.window.webContents.send( "on-data-update", commandSession.sessionID, data );
+    this.window.webContents.send( "data-update", commandSession.sessionID, data );
   },
 
   /**
@@ -128,7 +128,7 @@ export default {
       if( !this.getIPCSession( commandSession ) )
         this.createIPCSession( commandSession );
 
-      this.window.webContents.send( "on-command-changed", commandSession.sessionID, commandSession.commandConfig );
+      this.window.webContents.send( "command-changed", commandSession.sessionID, commandSession.commandConfig );
     };
 
     if( !this.window ) {

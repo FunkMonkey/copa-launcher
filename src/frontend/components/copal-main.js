@@ -21,12 +21,12 @@ export default class CopalMain extends React.Component {
   componentWillMount() {
     this.backendData = remote.getGlobal("copalGUISharedData");
 
-    ipc.on( "on-data-update", ( sessionID, data ) => {
+    ipc.on( "data-update", ( sessionID, data ) => {
       this.currSessionID = sessionID;
       this.onDataChange( data );
     });
 
-    ipc.on( "on-command-changed", ( sessionID, commandConfig ) => {
+    ipc.on( "command-changed", ( sessionID, commandConfig ) => {
       this.onCommandChange( commandConfig );
     } );
   }
