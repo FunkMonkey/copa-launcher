@@ -1,38 +1,38 @@
 var BrowserWindow = require("browser-window");
 
-var launcherData = global.launcherData = {
+var GUISharedData = global.copalGUISharedData = {
   commandSessions: {}
 };
 
 export default {
   init( copal ) {
 
-    copal.bricks.addInputBrick( "standard-query-input", "Launcher.input", this.input.bind( this ) );
-    copal.bricks.addOutputBrick( "list-title-url-icon", "Launcher.list-view", this.listView.bind( this ) );
+    copal.bricks.addInputBrick( "standard-query-input", "GUI.input", this.input.bind( this ) );
+    copal.bricks.addOutputBrick( "list-title-url-icon", "GUI.list-view", this.listView.bind( this ) );
 
     // TODO: don't create the window in init
-    this.createLauncherWindow();
-    this.launcherWindow.webContents.on("did-finish-load", () => {
+    this.createWindow();
+    this.window.webContents.on("did-finish-load", () => {
         copal.executeCommand("commands");
       });
   },
 
-  createLauncherWindow() {
-    this.launcherWindow = null;
-    this.launcherWindow = new BrowserWindow({ width: 500,
+  createWindow() {
+    this.window = null;
+    this.window = new BrowserWindow({ width: 500,
                                               height: 300,
                                               "node-integration": "manual-enable-iframe",
                                               frame: false,
                                               transparent: true });
 
 
-    this.launcherWindow.loadUrl("file://" + __dirname + "/../../view/index.html");
+    this.window.loadUrl("file://" + __dirname + "/../../view/index.html");
 
-    this.launcherWindow.on("closed", () => {
-      this.launcherWindow = null;
+    this.window.on("closed", () => {
+      this.window = null;
     });
 
-    this.launcherWindow.openDevTools();
+    this.window.openDevTools();
   },
 
   input: function ( commandSession ) {
@@ -41,7 +41,7 @@ export default {
   },
 
   getIPCSession( commandSession ) {
-    return launcherData.commandSessions[ commandSession.sessionID ];
+    return GUISharedData.commandSessions[ commandSession.sessionID ];
   },
 
   createIPCSession( commandSession ) {
@@ -49,10 +49,10 @@ export default {
     // destruction is important
     commandSession.getSignal("destroy").add( commandSession => {
       this.getIPCSession( commandSession ).destroy();
-      delete launcherData.commandSessions[commandSession.sessionID];
+      delete GUISharedData.commandSessions[commandSession.sessionID];
     } );
 
-    launcherData.commandSessions[ commandSession.sessionID ] = {
+    GUISharedData.commandSessions[ commandSession.sessionID ] = {
 
       commandSession: commandSession,
 
@@ -76,7 +76,7 @@ export default {
     if( !this.getIPCSession( commandSession ) )
       this.createIPCSession( commandSession );
 
-    this.launcherWindow.webContents.send( "on-data-update", commandSession.sessionID, data );
+    this.window.webContents.send( "on-data-update", commandSession.sessionID, data );
   }
 
 

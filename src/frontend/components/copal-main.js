@@ -18,7 +18,7 @@ export default class CopalMain extends React.Component {
   }
 
   componentWillMount() {
-    this.backendData = remote.getGlobal("launcherData");
+    this.backendData = remote.getGlobal("copalGUISharedData");
 
     ipc.on( "on-data-update", ( sessionID, data ) => {
       this.currSessionID = sessionID;
