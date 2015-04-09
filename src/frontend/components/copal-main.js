@@ -13,6 +13,7 @@ export default class CopalMain extends React.Component {
     this.backendData = null;
 
     this.state = {
+      commandName: "",
       listData: []
     };
   }
@@ -24,10 +25,22 @@ export default class CopalMain extends React.Component {
       this.currSessionID = sessionID;
       this.onDataChange( data );
     });
+
+    ipc.on( "on-command-changed", ( sessionID, commandConfig ) => {
+      this.onCommandChange( commandConfig );
+    } );
   }
 
   componentDidMount() {
     // React.findDOMNode( this.refs.list.focus() );
+  }
+
+  onCommandChange( commandConfig ) {
+    this.setState( {
+      commandName: commandConfig.name
+    });
+
+    this.refs.input.focus();
   }
 
   onDataChange( data ) {
@@ -55,8 +68,9 @@ export default class CopalMain extends React.Component {
         <div className="copal-main-settings-button">...</div>
 
         <div className="copal-main-top-row copal-dark-box">
-          <button className="copal-main-command">Command</button>
-          <CopalInput className="copal-main-input"
+          <button className="copal-main-command">{this.state.commandName}</button>
+          <CopalInput ref="input"
+                      className="copal-main-input"
                       onChange={this.onInputChange.bind(this)}
                       onUserExit={this.onInputExit.bind(this)} />
         </div>

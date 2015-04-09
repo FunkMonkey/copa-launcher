@@ -127,6 +127,8 @@ export default {
     var initInput = () => {
       if( !this.getIPCSession( commandSession ) )
         this.createIPCSession( commandSession );
+
+      this.window.webContents.send( "on-command-changed", commandSession.sessionID, commandSession.commandConfig );
     };
 
     if( !this.window ) {

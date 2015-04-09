@@ -3,6 +3,10 @@ import keycode from "keycode";
 
 export default class CopalInput extends React.Component {
 
+  focus() {
+    React.findDOMNode(this.refs.input).focus();
+  }
+
   onChange() {
     var value = React.findDOMNode(this.refs.input).value.trim();
     this.props.onChange( value );
