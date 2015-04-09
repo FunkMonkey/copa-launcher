@@ -1,49 +1,67 @@
-var BrowserWindow = require("browser-window");
+var BrowserWindow = null;
 
 var GUISharedData = global.copalGUISharedData = {
   commandSessions: {}
 };
 
 export default {
+
+  /**
+   * Initializes the GUI extension
+   *  - registers input and output brick
+   *
+   * @param    {Copal}   copal   Copal instance to extend
+   */
   init( copal ) {
-
-    copal.bricks.addInputBrick( "standard-query-input", "GUI.input", this.input.bind( this ) );
-    copal.bricks.addOutputBrick( "list-title-url-icon", "GUI.list-view", this.listView.bind( this ) );
-
-    // TODO: don't create the window in init
-    this.createWindow();
-    this.window.webContents.on("did-finish-load", () => {
-        copal.executeCommand("commands");
-      });
+    copal.bricks.addInputBrick( "standard-query-input", "GUI.input", this.brickInput.bind( this ) );
+    copal.bricks.addOutputBrick( "list-title-url-icon", "GUI.list-view", this.brickListView.bind( this ) );
   },
 
+  /**
+   * Creates a GUI window
+   *
+   * @return   {Promise}   Promise that resolves, when window did finish loading
+   */
   createWindow() {
-    this.window = null;
-    this.window = new BrowserWindow({ width: 500,
-                                              height: 300,
-                                              "node-integration": "manual-enable-iframe",
-                                              frame: false,
-                                              transparent: true });
+
+    return new Promise( (resolve, reject) => {
+
+      try {
+        if( !BrowserWindow )
+          BrowserWindow = require("browser-window"); // load module only when necessary
+
+        var newWindow = new BrowserWindow({ width: 500,
+                                            height: 300,
+                                            "node-integration": "manual-enable-iframe",
+                                            frame: false,
+                                            transparent: true });
 
 
-    this.window.loadUrl("file://" + __dirname + "/../../view/index.html");
+        newWindow.loadUrl("file://" + __dirname + "/../../view/index.html");
 
-    this.window.on("closed", () => {
-      this.window = null;
-    });
+        newWindow.on("closed", () => {
+          newWindow = null;
+        });
 
-    this.window.openDevTools();
+        newWindow.openDevTools();
+
+        newWindow.webContents.on("did-finish-load", () => {
+          resolve( newWindow );
+        });
+
+      } catch ( e ) {
+        reject( e );
+      }
+
+    } );
   },
 
-  input: function ( commandSession ) {
-    if( !this.getIPCSession( commandSession ) )
-      this.createIPCSession( commandSession );
-  },
-
-  getIPCSession( commandSession ) {
-    return GUISharedData.commandSessions[ commandSession.sessionID ];
-  },
-
+  /**
+   * Creates an IPC session for the given CommandSession
+   *  - IPC session is used for communicating with the GUI window
+   *
+   * @param    {CommandSession}   commandSession
+   */
   createIPCSession( commandSession ) {
 
     // destruction is important
@@ -72,12 +90,56 @@ export default {
     };
   },
 
-  listView: function ( commandSession, data ) {
+  /**
+   * Gets the IPC session for the given CommandSession
+   *  - IPC session is used for communicating with the GUI window
+   *
+   * @param    {CommandSession}   commandSession
+   *
+   * @return   {Object}                            The IPC session
+   */
+  getIPCSession( commandSession ) {
+    return GUISharedData.commandSessions[ commandSession.sessionID ];
+  },
+
+  /**
+   * Output brick for displaying list data
+   *
+   * @param    {CommandSession}   commandSession   CommandSession that is currently active
+   * @param    {Object}           data             Data to display
+   */
+  brickListView: function ( commandSession, data ) {
     if( !this.getIPCSession( commandSession ) )
       this.createIPCSession( commandSession );
 
     this.window.webContents.send( "on-data-update", commandSession.sessionID, data );
-  }
+  },
 
+  /**
+   * Input brick
+   *   - creates the GUI window if necessary
+   *
+   * @param    {CommandSession}   commandSession   CommandSession that is currently active
+   *
+   * @return   {Promise}                           Promise that resolves, when Input is ready
+   */
+  brickInput: function ( commandSession ) {
+    var initInput = () => {
+      if( !this.getIPCSession( commandSession ) )
+        this.createIPCSession( commandSession );
+    };
+
+    if( !this.window ) {
+      return this.createWindow()
+                 .then( window => {
+                   this.window = window;
+                   initInput();
+                 } );
+    } else {
+      initInput();
+      return Promise.resolve();
+    }
+
+  }
 
 };
