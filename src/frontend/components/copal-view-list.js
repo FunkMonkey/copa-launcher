@@ -24,10 +24,12 @@ export default class CopalViewList extends React.Component {
 
 
     // TODO: don't create an event-listener for every item
-    var items = this.props.items.map( (item, index) => {
+    var items = this.props.items.map( (item) => {
+      var title = ( typeof item === "string" ) ? item : item.title;
+
       return (
-          <div key={item} >
-            {item}
+          <div key={title} >
+            {title}
           </div>
         );
     });
