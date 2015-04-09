@@ -128,6 +128,7 @@ export default {
       if( !this.getIPCSession( commandSession ) )
         this.createIPCSession( commandSession );
 
+      this.window.show();
       this.window.webContents.send( "command-changed", commandSession.sessionID, commandSession.commandConfig );
     };
 
