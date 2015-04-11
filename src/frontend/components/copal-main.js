@@ -79,7 +79,7 @@ export default class CopalMain extends React.Component {
   }
 
   onItemExecute( item ) {
-    this.backendData.commandSessions[this.currSessionID].dispatchSignal( "listitem-execute", "listitem-title-url-icon", item );
+    this.backendData.commandSessions[this.currSessionID].dispatchSignal( "listitem-execute", item, { datatype: "listitem-title-url-icon" } );
   }
 
   onInputExit() {

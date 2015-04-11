@@ -88,8 +88,8 @@ export default {
         this.commandSession.getSignal( "input" ).dispatch( queryObj, { sender: "copal-gui" } );
       },
 
-      dispatchSignal( signalName, datatype, signalData ) {
-        this.commandSession.getSignal( signalName ).dispatch( datatype, signalData );
+      dispatchSignal( signalName, data, metaData ) {
+        this.commandSession.getSignal( signalName ).dispatch( data, metaData );
       }
     };
   },
