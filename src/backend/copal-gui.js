@@ -70,6 +70,10 @@ export default {
       delete GUISharedData.commandSessions[commandSession.sessionID];
     } );
 
+    commandSession.getSignal("input").add( ( commandSession, inputData, metaData ) => {
+      this.window.webContents.send( "input-update", commandSession.sessionID, inputData, metaData );
+    } );
+
     GUISharedData.commandSessions[ commandSession.sessionID ] = {
 
       commandSession: commandSession,
@@ -81,7 +85,7 @@ export default {
         // using the original query as a prototype, so we don't lose any other query information
         var queryObj = Object.create( this.commandSession.initialData );
         queryObj.queryString = queryString;
-        this.commandSession.getSignal( "input" ).dispatch( queryObj );
+        this.commandSession.getSignal( "input" ).dispatch( queryObj, { sender: "copal-gui" } );
       },
 
       dispatchSignal( signalName, datatype, signalData ) {
@@ -130,6 +134,7 @@ export default {
 
       this.window.show();
       this.window.webContents.send( "command-changed", commandSession.sessionID, commandSession.commandConfig );
+
     };
 
     if( !this.window ) {
@@ -140,7 +145,9 @@ export default {
                  } );
     } else {
       initInput();
-      return Promise.resolve();
+
+      // TODO: for whatever reason `return Promise.resolve()` will just resolve once the user used the input field again...
+      return new Promise( resolve => setTimeout( () => resolve(), 0 ) );
     }
 
   }

@@ -14,21 +14,34 @@ export default class CopalMain extends React.Component {
 
     this.state = {
       commandName: "",
-      listData: []
+      listData: [],
+      inputValue: ""
     };
   }
 
   componentWillMount() {
     this.backendData = remote.getGlobal("copalGUISharedData");
 
-    ipc.on( "data-update", ( sessionID, data ) => {
-      this.currSessionID = sessionID;
-      this.onDataChange( data );
-    });
-
     ipc.on( "command-changed", ( sessionID, commandConfig ) => {
+      this.currSessionID = sessionID;
       this.onCommandChange( commandConfig );
     } );
+
+    ipc.on( "input-update", ( sessionID, inputData, metaData ) => {
+
+      // we can safely ignore our own inputs
+      if( metaData && metaData.sender === "copal-gui" )
+        return;
+
+      this.onCommandInputUpdate( inputData, metaData );
+
+    } );
+
+    ipc.on( "data-update", ( sessionID, data ) => {
+      this.currSessionID = sessionID;
+      this.onDataUpdate( data );
+    });
+
   }
 
   componentDidMount() {
@@ -43,14 +56,26 @@ export default class CopalMain extends React.Component {
     this.refs.input.focus();
   }
 
-  onDataChange( data ) {
+  onCommandInputUpdate( inputData ) {
+
+    var value = ( inputData && inputData.queryString ) || "";
+
+    this.setState( {
+      inputValue: value
+    } );
+  }
+
+  onDataUpdate( data ) {
     this.setState( {
       listData: data
     } );
   }
 
-  onInputChange( query ) {
-    this.backendData.commandSessions[this.currSessionID].dispatchInput( query );
+  onInputChange( value ) {
+    this.setState( {
+        inputValue: value
+      } );
+    this.backendData.commandSessions[this.currSessionID].dispatchInput( value.trim() );
   }
 
   onItemExecute( item ) {
@@ -71,6 +96,7 @@ export default class CopalMain extends React.Component {
           <button className="copal-main-command">{this.state.commandName}</button>
           <CopalInput ref="input"
                       className="copal-main-input"
+                      value={ this.state.inputValue }
                       onChange={this.onInputChange.bind(this)}
                       onUserExit={this.onInputExit.bind(this)} />
         </div>
