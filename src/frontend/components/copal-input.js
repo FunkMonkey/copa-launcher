@@ -21,7 +21,6 @@ export default class CopalInput extends React.Component {
   }
 
   onChange( event ) {
-    // var value = React.findDOMNode(this.refs.input).value.trim();
     this.setState({value: event.target.value});
     this.props.onChange( event.target.value );
   }
@@ -30,11 +29,11 @@ export default class CopalInput extends React.Component {
     var key = keycode( event );
 
     switch( key ) {
-      case "down": this.props.onUserExit && this.props.onUserExit("down"); break;
+      case "down":  this.props.onUserExit && this.props.onUserExit("down"); break;
+      case "enter": this.props.onChangeSpecial && this.props.onChangeSpecial( event.target.value ); break;
     }
   }
 
-  // TODO: classnames
   render() {
 
     return (

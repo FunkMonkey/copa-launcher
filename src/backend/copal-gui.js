@@ -83,13 +83,17 @@ export default {
 
       dispatchInput( queryString ) {
         // using the original query as a prototype, so we don't lose any other query information
-        var queryObj = Object.create( this.commandSession.initialData );
+        var queryObj = Object.create( this.commandSession.commandConfig.initialData );
         queryObj.queryString = queryString;
         this.commandSession.getSignal( "input" ).dispatch( queryObj, { sender: "copal-gui" } );
       },
 
       dispatchSignal( signalName, data, metaData ) {
         this.commandSession.getSignal( signalName ).dispatch( data, metaData );
+      },
+
+      getNumSignalListeners( signalName ) {
+        return this.commandSession.getSignal( signalName ).getNumListeners();
       }
     };
   },
@@ -146,7 +150,7 @@ export default {
     } else {
       initInput();
 
-      // TODO: for whatever reason `return Promise.resolve()` will just resolve once the user used the input field again...
+      // for whatever reason `return Promise.resolve()` will just resolve once the user used the input field again...
       return new Promise( resolve => setTimeout( () => resolve(), 0 ) );
     }
 

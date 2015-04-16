@@ -29,6 +29,11 @@ export default class CopalMain extends React.Component {
 
     ipc.on( "input-update", ( sessionID, inputData, metaData ) => {
 
+      if( sessionID !== this.currSessionID ) {
+        console.log( "Debug: sessionID does not match sessionID of currrent command" );
+        return;
+      }
+
       // we can safely ignore our own inputs
       if( metaData && metaData.sender === "copal-gui" )
         return;
@@ -38,7 +43,11 @@ export default class CopalMain extends React.Component {
     } );
 
     ipc.on( "data-update", ( sessionID, data ) => {
-      this.currSessionID = sessionID;
+      if( sessionID !== this.currSessionID ) {
+        console.log( "Debug: sessionID does not match sessionID of currrent command" );
+        return;
+      }
+
       this.onDataUpdate( data );
     });
 
@@ -78,6 +87,16 @@ export default class CopalMain extends React.Component {
     this.backendData.commandSessions[this.currSessionID].dispatchInput( value.trim() );
   }
 
+  onInputChangeSpecial( value ) {
+    var session = this.backendData.commandSessions[this.currSessionID];
+    if( session.getNumSignalListeners("input-special") > 0 ) {
+      session.dispatchInput( value.trim() );
+    } else {
+      // temporary hack: when no one listens to `input-special`, we'll focus on the list
+      this.onInputExit();
+    }
+  }
+
   onItemExecute( item ) {
     this.backendData.commandSessions[this.currSessionID].dispatchSignal( "listitem-execute", item, { datatype: "listitem-title-url-icon" } );
   }
@@ -98,6 +117,7 @@ export default class CopalMain extends React.Component {
                       className="copal-main-input"
                       value={ this.state.inputValue }
                       onChange={this.onInputChange.bind(this)}
+                      onChangeSpecial={this.onInputChangeSpecial.bind(this)}
                       onUserExit={this.onInputExit.bind(this)} />
         </div>
 

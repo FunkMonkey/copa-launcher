@@ -22,8 +22,6 @@ export default class CopalViewList extends React.Component {
 
   render() {
 
-
-    // TODO: don't create an event-listener for every item
     var items = this.props.items.map( (item) => {
       var title = ( typeof item === "string" ) ? item : item.title;
 
