@@ -2,7 +2,7 @@
 // require('remote').getGlobal('sharedObject').message("some fuzzy message");
 import React from "react";
 
-import CopalMain from "../build/frontend/components/copal-main";
+import CopalMain from "../scripts/components/copal-main";
 
 
 React.render(

@@ -37,7 +37,7 @@ export default {
                                             transparent: true });
 
 
-        newWindow.loadUrl("file://" + __dirname + "/../../view/index.html");
+        newWindow.loadUrl("file://" + __dirname + "/../frontend/views/index.html");
 
         newWindow.on("closed", () => {
           newWindow = null;
