@@ -15,10 +15,25 @@ function logWatchEvent( event ) {
 }
 
 var GLOB_BACKEND_SCRIPTS =  "./src/backend/**/*.js";
+var GLOB_BACKEND_CONFIGS =  "./src/backend/**/*.json";
 var GLOB_FRONTEND_SCRIPTS = "./src/frontend/scripts/**/*.js";
 var GLOB_FRONTEND_VIEWS =   "./src/frontend/views/**/*.html";
 var GLOB_FRONTEND_STYLES =  "./src/frontend/styles/**/*.css";
 var GLOB_FRONTEND_ASSETS =  "./src/frontend/assets/**/*.*";
+
+gulp.task( "build:backend-scripts", function() {
+  return gulp.src( GLOB_BACKEND_SCRIPTS )
+             .pipe( sourcemaps.init() )
+             .pipe( babel() )
+             .on( "error", onError )
+             .pipe( sourcemaps.write( "." ) )
+             .pipe( gulp.dest( "build/backend" ) );
+});
+
+gulp.task( "build:backend-configs", function () {
+  return gulp.src( GLOB_BACKEND_CONFIGS )
+             .pipe( gulp.dest( "build/backend" ) );
+});
 
 gulp.task( "build:frontend-views", function () {
   return gulp.src( GLOB_FRONTEND_VIEWS )
@@ -44,20 +59,13 @@ gulp.task( "build:frontend-scripts", function() {
              .pipe( gulp.dest( "build/frontend/scripts" ) );
 });
 
-gulp.task( "build:backend-scripts", function() {
-  return gulp.src( GLOB_BACKEND_SCRIPTS )
-             .pipe( sourcemaps.init() )
-             .pipe( babel() )
-             .on( "error", onError )
-             .pipe( sourcemaps.write( "." ) )
-             .pipe( gulp.dest( "build/backend" ) );
-});
-
-gulp.task( "build", ["build:backend-scripts", "build:frontend-scripts", "build:frontend-views", "build:frontend-styles", "build:frontend-assets"] );
+gulp.task( "build", ["build:backend-scripts", "build:backend-configs", "build:frontend-scripts", "build:frontend-views", "build:frontend-styles", "build:frontend-assets"] );
 
 gulp.task( "watch:build", function ( ) {
 
   gulp.watch( GLOB_BACKEND_SCRIPTS, ["build:backend-scripts"] )
+      .on( "change", logWatchEvent );
+  gulp.watch( GLOB_BACKEND_CONFIGS, ["build:backend-configs"] )
       .on( "change", logWatchEvent );
   gulp.watch( GLOB_FRONTEND_ASSETS,   ["build:frontend-assets"])
       .on( "change", logWatchEvent );

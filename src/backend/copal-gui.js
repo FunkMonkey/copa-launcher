@@ -1,3 +1,5 @@
+import DEFAULT_SETTINGS_GUI from "./default-settings-gui.json";
+
 var BrowserWindow = null;
 
 var GUISharedData = global.copalGUISharedData = {
@@ -13,6 +15,9 @@ export default {
    * @param    {Copal}   copal   Copal instance to extend
    */
   init( copal ) {
+    this.settings = copal.loadProfileConfig( "settings-gui.json" ) || {};
+    this.settings = copal.defaultifyOptions( this.settings, DEFAULT_SETTINGS_GUI, true );
+
     copal.bricks.addInputBrick( "standard-query-input", "GUI.input", this.brickInput.bind( this ) );
     copal.bricks.addOutputBrick( "list-title-url-icon", "GUI.list-view", this.brickListView.bind( this ) );
   },
@@ -43,7 +48,8 @@ export default {
           newWindow = null;
         });
 
-        newWindow.openDevTools();
+        if( this.settings.devTools )
+          newWindow.openDevTools();
 
         newWindow.webContents.on("did-finish-load", () => {
           resolve( newWindow );
