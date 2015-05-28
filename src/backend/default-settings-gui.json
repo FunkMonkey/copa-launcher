@@ -1,4 +1,6 @@
 {
 	"debug": false,
-	"devTools": false
+	"devTools": false,
+	"hideFromTaskbar": true,
+	"alwaysOnTop": false  
 }

@@ -41,6 +41,8 @@ export default {
                                             frame: false,
                                             transparent: true });
 
+        if( this.settings.hideFromTaskbar )
+          newWindow.setSkipTaskbar( true );
 
         newWindow.loadUrl("file://" + __dirname + "/../frontend/views/index.html");
 
@@ -89,7 +91,7 @@ export default {
 
       dispatchInput( queryString ) {
         // using the original query as a prototype, so we don't lose any other query information
-        var queryObj = Object.create( this.commandSession.commandConfig.initialData );
+        var queryObj = Object.create( this.commandSession.commandConfig.initialData || {} );
         queryObj.queryString = queryString;
         this.commandSession.getSignal( "input" ).dispatch( queryObj, { sender: "copal-gui" } );
       },
