@@ -23,32 +23,44 @@ export default class CopalMain extends React.Component {
     this.backendData = remote.getGlobal("copalGUISharedData");
 
     ipc.on( "command-changed", ( sessionID, commandConfig ) => {
+
       this.currSessionID = sessionID;
       this.onCommandChange( commandConfig );
     } );
 
-    ipc.on( "input-update", ( sessionID, inputData, metaData ) => {
+    ipc.on( "input-update", ( error, dataAndMeta ) => {
 
-      if( sessionID !== this.currSessionID ) {
-        console.log( "Debug: sessionID does not match sessionID of currrent command" );
+      if( error ) {
+        console.error( error );
+        return;
+      }
+
+      if( dataAndMeta.session.sessionID !== this.currSessionID ) {
+        console.error( "Debug: sessionID does not match sessionID of currrent command", this.currSessionID, dataAndMeta.session.sessionID );
         return;
       }
 
       // we can safely ignore our own inputs
-      if( metaData && metaData.sender === "copal-gui" )
+      if( dataAndMeta && dataAndMeta.sender === "copal-gui" )
         return;
 
-      this.onCommandInputUpdate( inputData, metaData );
+      this.onCommandInputUpdate( dataAndMeta.data );
 
     } );
 
-    ipc.on( "data-update", ( sessionID, data ) => {
-      if( sessionID !== this.currSessionID ) {
-        console.log( "Debug: sessionID does not match sessionID of currrent command" );
+    ipc.on( "data-update", ( error, dataAndMeta ) => {
+
+      if( error ) {
+        console.error( error );
         return;
       }
 
-      this.onDataUpdate( data );
+      if( dataAndMeta.session.sessionID !== this.currSessionID ) {
+        console.error( "Debug: sessionID does not match sessionID of currrent command", this.currSessionID, dataAndMeta.session.sessionID );
+        return;
+      }
+
+      this.onDataUpdate( dataAndMeta.data );
     });
 
   }
@@ -98,7 +110,7 @@ export default class CopalMain extends React.Component {
   }
 
   onItemExecute( item ) {
-    this.backendData.commandSessions[this.currSessionID].dispatchSignal( "listitem-execute", item, { datatype: "listitem-title-url-icon" } );
+    this.backendData.commandSessions[this.currSessionID].dispatchSignal( "listitem-execute", null, { data: item, datatype: "listitem-title-url-icon" } );
   }
 
   onInputExit() {

@@ -1,4 +1,5 @@
 import DEFAULT_SETTINGS_GUI from "./default-settings-gui.json";
+import util from "util";
 
 var BrowserWindow = null;
 
@@ -73,13 +74,13 @@ export default {
   createIPCSession( commandSession ) {
 
     // destruction is important
-    commandSession.getSignal("destroy").add( commandSession => {
+    commandSession.getSignal("destroy").add( ( error, dataAndMeta ) => {
       this.getIPCSession( commandSession ).destroy();
       delete GUISharedData.commandSessions[commandSession.sessionID];
     } );
 
-    commandSession.getSignal("input").add( ( commandSession, inputData, metaData ) => {
-      this.window.webContents.send( "input-update", commandSession.sessionID, inputData, metaData );
+    commandSession.getSignal("input").add( ( error, dataAndMeta ) => {
+      this.window.webContents.send( "input-update", error, dataAndMeta );
     } );
 
     GUISharedData.commandSessions[ commandSession.sessionID ] = {
@@ -93,11 +94,16 @@ export default {
         // using the original query as a prototype, so we don't lose any other query information
         var queryObj = Object.create( this.commandSession.commandConfig.initialData || {} );
         queryObj.queryString = queryString;
-        this.commandSession.getSignal( "input" ).dispatch( queryObj, { sender: "copal-gui" } );
+        var dataAndMeta = {
+          data: queryObj,
+          sender: "copal-gui"
+        };
+        this.commandSession.getSignal( "input" ).dispatch( null, dataAndMeta );
       },
 
-      dispatchSignal( signalName, data, metaData ) {
-        this.commandSession.getSignal( signalName ).dispatch( data, metaData );
+      dispatchSignal( signalName, error, dataAndMeta ) {
+        dataAndMeta.session = this.commandSession;
+        this.commandSession.getSignal( signalName ).dispatch( error, dataAndMeta );
       },
 
       getNumSignalListeners( signalName ) {
@@ -124,11 +130,20 @@ export default {
    * @param    {CommandSession}   commandSession   CommandSession that is currently active
    * @param    {Object}           data             Data to display
    */
-  brickListView: function ( commandSession, data ) {
-    if( !this.getIPCSession( commandSession ) )
-      this.createIPCSession( commandSession );
+  brickListView: function ( error, dataAndMeta ) {
+    if( !this.getIPCSession( dataAndMeta.session ) )
+      this.createIPCSession( dataAndMeta.session );
 
-    this.window.webContents.send( "data-update", commandSession.sessionID, data );
+    var errorInfo = null;
+
+    if( error ) {
+      errorInfo = {
+        message: error.message,
+        stack: error.stack
+      }
+    }
+
+    this.window.webContents.send( "data-update", errorInfo, dataAndMeta );
   },
 
   /**
@@ -139,13 +154,15 @@ export default {
    *
    * @return   {Promise}                           Promise that resolves, when Input is ready
    */
-  brickInput: function ( commandSession ) {
+  brickInput: function ( error, dataAndMeta ) {
+    // console.log(util.inspect(error, false, null));
+    // console.log(util.inspect(dataAndMeta, false, null));
     var initInput = () => {
-      if( !this.getIPCSession( commandSession ) )
-        this.createIPCSession( commandSession );
+      if( !this.getIPCSession( dataAndMeta.session ) )
+        this.createIPCSession( dataAndMeta.session );
 
       this.window.show();
-      this.window.webContents.send( "command-changed", commandSession.sessionID, commandSession.commandConfig );
+      this.window.webContents.send( "command-changed", dataAndMeta.session.sessionID, dataAndMeta.session.commandConfig );
 
     };
 
