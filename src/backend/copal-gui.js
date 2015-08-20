@@ -1,11 +1,19 @@
 import DEFAULT_SETTINGS_GUI from "./default-settings-gui.json";
 import util from "util";
+import {PassThrough} from "stream";
+import through2 from "through2";
+
+import IPCCommandSession from "./ipc-command-session";
+
+import WebContentsWritable from "./webcontents-writable";
+import BlockUntilResolvedTransform from "./block-until-resolved-transform";
 
 var BrowserWindow = null;
 
-var GUISharedData = global.copalGUISharedData = {
-  commandSessions: {}
-};
+if( !global.copalGUISharedData )
+  global.copalGUISharedData = {}
+
+var GUISharedData = global.copalGUISharedData;
 
 export default {
 
@@ -19,8 +27,8 @@ export default {
     this.settings = copal.loadProfileConfig( "settings-gui.json" ) || {};
     this.settings = copal.defaultifyOptions( this.settings, DEFAULT_SETTINGS_GUI, true );
 
-    copal.bricks.addInputBrick( "standard-query-input", "GUI.input", this.brickInput.bind( this ) );
-    copal.bricks.addOutputBrick( "list-title-url-icon", "GUI.list-view", this.brickListView.bind( this ) );
+    copal.bricks.addInputBrick( "GUI.input", this.brickInput.bind( this ) );
+    copal.bricks.addOutputBrick( "GUI.list-view", this.brickListView.bind( this ) );
   },
 
   /**
@@ -65,6 +73,13 @@ export default {
     } );
   },
 
+  getOrCreateWindowPromise() {
+    if( !this._windowPromise )
+      this._windowPromise = this.createWindow().then( window => this.window = window );
+
+    return this._windowPromise;
+  },
+
   /**
    * Creates an IPC session for the given CommandSession
    *  - IPC session is used for communicating with the GUI window
@@ -72,44 +87,7 @@ export default {
    * @param    {CommandSession}   commandSession
    */
   createIPCSession( commandSession ) {
-
-    // destruction is important
-    commandSession.getSignal("destroy").add( ( error, dataAndMeta ) => {
-      this.getIPCSession( commandSession ).destroy();
-      delete GUISharedData.commandSessions[commandSession.sessionID];
-    } );
-
-    commandSession.getSignal("input").add( ( error, dataAndMeta ) => {
-      this.window.webContents.send( "input-update", error, dataAndMeta );
-    } );
-
-    GUISharedData.commandSessions[ commandSession.sessionID ] = {
-
-      commandSession: commandSession,
-
-      destroy() {
-      },
-
-      dispatchInput( queryString ) {
-        // using the original query as a prototype, so we don't lose any other query information
-        var queryObj = Object.create( this.commandSession.commandConfig.initialData || {} );
-        queryObj.queryString = queryString;
-        var dataAndMeta = {
-          data: queryObj,
-          sender: "copal-gui"
-        };
-        this.commandSession.getSignal( "input" ).dispatch( null, dataAndMeta );
-      },
-
-      dispatchSignal( signalName, error, dataAndMeta ) {
-        dataAndMeta.session = this.commandSession;
-        this.commandSession.getSignal( signalName ).dispatch( error, dataAndMeta );
-      },
-
-      getNumSignalListeners( signalName ) {
-        return this.commandSession.getSignal( signalName ).getNumListeners();
-      }
-    };
+    return new IPCCommandSession( commandSession );
   },
 
   /**
@@ -121,7 +99,7 @@ export default {
    * @return   {Object}                            The IPC session
    */
   getIPCSession( commandSession ) {
-    return GUISharedData.commandSessions[ commandSession.sessionID ];
+    return GUISharedData.ipcCommandSessions[ commandSession.sessionID ];
   },
 
   /**
@@ -130,20 +108,19 @@ export default {
    * @param    {CommandSession}   commandSession   CommandSession that is currently active
    * @param    {Object}           data             Data to display
    */
-  brickListView: function ( error, dataAndMeta ) {
-    if( !this.getIPCSession( dataAndMeta.session ) )
-      this.createIPCSession( dataAndMeta.session );
+  brickListView: function ( session ) {
 
-    var errorInfo = null;
+    var waitForWindow = this.getOrCreateWindowPromise().then( () => {
+      if( !this.getIPCSession( session ) )
+        this.createIPCSession( session );
+    });
 
-    if( error ) {
-      errorInfo = {
-        message: error.message,
-        stack: error.stack
-      }
-    }
+    var blockUntilTransform = new BlockUntilResolvedTransform( { objectMode: true, promise: waitForWindow } );
+    var toWebContents = new WebContentsWritable( { objectMode: true, getWindow: () => this.window, args: ["data-update", session.sessionID] } );
+    blockUntilTransform.pipe( toWebContents );
 
-    this.window.webContents.send( "data-update", errorInfo, dataAndMeta );
+    // returning the transform only, so multiple outputs can be piped
+    return blockUntilTransform;
   },
 
   /**
@@ -154,31 +131,26 @@ export default {
    *
    * @return   {Promise}                           Promise that resolves, when Input is ready
    */
-  brickInput: function ( error, dataAndMeta ) {
-    // console.log(util.inspect(error, false, null));
-    // console.log(util.inspect(dataAndMeta, false, null));
-    var initInput = () => {
-      if( !this.getIPCSession( dataAndMeta.session ) )
-        this.createIPCSession( dataAndMeta.session );
+  brickInput: function ( session ) {
+    var ipcSession = this.getIPCSession( session );
+    if( !ipcSession )
+      ipcSession = this.createIPCSession( session );
 
+    ipcSession._inputStream = new PassThrough( { objectMode: true } );
+
+    const waitForWindow = this.getOrCreateWindowPromise().then( () => {
+      this.window.webContents.send( "command-changed", session.sessionID, session.commandConfig );
       this.window.show();
-      this.window.webContents.send( "command-changed", dataAndMeta.session.sessionID, dataAndMeta.session.commandConfig );
+    });
 
-    };
+    // update input field via WebContentsWritable
+    var blockUntilWindow = new BlockUntilResolvedTransform( { objectMode: true, promise: waitForWindow } );
+    var toWebContents = new WebContentsWritable( { objectMode: true, getWindow: () => this.window, args: ["input-update", session.sessionID] } );
+    blockUntilWindow.pipe( toWebContents );
 
-    if( !this.window ) {
-      return this.createWindow()
-                 .then( window => {
-                   this.window = window;
-                   initInput();
-                 } );
-    } else {
-      initInput();
+    session.getStream( "input" ).pipe( blockUntilWindow );
 
-      // for whatever reason `return Promise.resolve()` will just resolve once the user used the input field again...
-      return new Promise( resolve => setTimeout( () => resolve(), 0 ) );
-    }
-
+    return ipcSession._inputStream;
   }
 
 };

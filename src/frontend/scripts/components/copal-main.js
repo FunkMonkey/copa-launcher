@@ -23,20 +23,13 @@ export default class CopalMain extends React.Component {
     this.backendData = remote.getGlobal("copalGUISharedData");
 
     ipc.on( "command-changed", ( sessionID, commandConfig ) => {
-
       this.currSessionID = sessionID;
       this.onCommandChange( commandConfig );
     } );
 
-    ipc.on( "input-update", ( error, dataAndMeta ) => {
-
-      if( error ) {
-        console.error( error );
-        return;
-      }
-
-      if( dataAndMeta.session.sessionID !== this.currSessionID ) {
-        console.error( "Debug: sessionID does not match sessionID of currrent command", this.currSessionID, dataAndMeta.session.sessionID );
+    ipc.on( "input-update", ( sessionID, dataAndMeta ) => {
+      if( sessionID !== this.currSessionID ) {
+        console.error( "Debug: sessionID does not match sessionID of currrent command", this.currSessionID, sessionID );
         return;
       }
 
@@ -48,15 +41,9 @@ export default class CopalMain extends React.Component {
 
     } );
 
-    ipc.on( "data-update", ( error, dataAndMeta ) => {
-
-      if( error ) {
-        console.error( error );
-        return;
-      }
-
-      if( dataAndMeta.session.sessionID !== this.currSessionID ) {
-        console.error( "Debug: sessionID does not match sessionID of currrent command", this.currSessionID, dataAndMeta.session.sessionID );
+    ipc.on( "data-update", ( sessionID, dataAndMeta ) => {
+      if( sessionID !== this.currSessionID ) {
+        console.error( "Debug: sessionID does not match sessionID of currrent command", this.currSessionID, sessionID );
         return;
       }
 
@@ -96,13 +83,14 @@ export default class CopalMain extends React.Component {
     this.setState( {
         inputValue: value
       } );
-    this.backendData.commandSessions[this.currSessionID].dispatchInput( value.trim() );
+
+    this.backendData.ipcCommandSessions[this.currSessionID].pushInput( value.trim() );
   }
 
   onInputChangeSpecial( value ) {
-    var session = this.backendData.commandSessions[this.currSessionID];
+    var session = this.backendData.ipcCommandSessions[this.currSessionID];
     if( session.getNumSignalListeners("input-special") > 0 ) {
-      session.dispatchInput( value.trim() );
+      session.pushInput( value.trim() );
     } else {
       // temporary hack: when no one listens to `input-special`, we'll focus on the list
       this.onInputExit();
@@ -110,7 +98,7 @@ export default class CopalMain extends React.Component {
   }
 
   onItemExecute( item ) {
-    this.backendData.commandSessions[this.currSessionID].dispatchSignal( "listitem-execute", null, { data: item, datatype: "listitem-title-url-icon" } );
+    this.backendData.ipcCommandSessions[this.currSessionID].pushIntoStream( "listitem-execute", { data: item, datatype: "listitem-title-url-icon" } );
   }
 
   onInputExit() {
