@@ -6,11 +6,12 @@ import remote from "remote";
 import keycode from "keycode";
 
 var currWindow = remote.getCurrentWindow( );
+var sharedData = remote.getGlobal("copalGUISharedData");
 
 // hiding window on lost focus
-// TODO: find a more intelligent solution in case this is not the desired behaviour
-currWindow.on( "blur", event => {
-	currWindow.hide( );
+currWindow.on( "blur", () => {
+	if( sharedData.settings.hideOnBlur )
+		currWindow.hide( );
 } );
 
 // TEMPORARY: hiding on escape

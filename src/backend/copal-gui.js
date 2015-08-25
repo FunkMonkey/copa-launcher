@@ -26,6 +26,7 @@ export default {
   init( copal ) {
     this.settings = copal.loadProfileConfig( "settings-gui.json" ) || {};
     this.settings = copal.defaultifyOptions( this.settings, DEFAULT_SETTINGS_GUI, true );
+    global.copalGUISharedData.settings = this.settings;
 
     copal.bricks.addInputBrick( "GUI.input", this.brickInput.bind( this ) );
     copal.bricks.addOutputBrick( "GUI.list-view", this.brickListView.bind( this ) );
