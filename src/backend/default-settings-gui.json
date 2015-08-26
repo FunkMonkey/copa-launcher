@@ -1,7 +1,15 @@
 {
 	"debug": false,
 	"devTools": false,
-	"hideFromTaskbar": true,
-	"alwaysOnTop": false,
-	"hideOnBlur": true
+	"hideOnBlur": true,
+
+	"browserWindowOptions": {
+		"skip-taskbar": true,
+		"always-on-top": false,
+		"width": 500,
+		"height": 300,
+		"node-integration": "manual-enable-iframe",
+		"frame": false,
+		"transparent": true
+	}
 }

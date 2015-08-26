@@ -45,14 +45,7 @@ export default {
         if( !BrowserWindow )
           BrowserWindow = require("browser-window"); // load module only when necessary
 
-        var newWindow = new BrowserWindow({ width: 500,
-                                            height: 300,
-                                            "node-integration": "manual-enable-iframe",
-                                            frame: false,
-                                            transparent: true });
-
-        if( this.settings.hideFromTaskbar )
-          newWindow.setSkipTaskbar( true );
+        var newWindow = new BrowserWindow( this.settings.browserWindowOptions );
 
         newWindow.loadUrl("file://" + __dirname + "/../frontend/views/index.html");
 
