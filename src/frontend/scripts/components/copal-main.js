@@ -27,27 +27,27 @@ export default class CopalMain extends React.Component {
       this.onCommandChange( commandConfig );
     } );
 
-    ipc.on( "input-update", ( sessionID, dataAndMeta ) => {
+    ipc.on( "input-update", ( sessionID, data ) => {
       if( sessionID !== this.currSessionID ) {
         console.error( "Debug: sessionID does not match sessionID of currrent command", this.currSessionID, sessionID );
         return;
       }
 
       // we can safely ignore our own inputs
-      if( dataAndMeta && dataAndMeta.sender === "copal-gui" )
+      if( data && data.sender === "copal-gui" )
         return;
 
-      this.onCommandInputUpdate( dataAndMeta.data );
+      this.onCommandInputUpdate( data );
 
     } );
 
-    ipc.on( "data-update", ( sessionID, dataAndMeta ) => {
+    ipc.on( "data-update", ( sessionID, data ) => {
       if( sessionID !== this.currSessionID ) {
         console.error( "Debug: sessionID does not match sessionID of currrent command", this.currSessionID, sessionID );
         return;
       }
 
-      this.onDataUpdate( dataAndMeta.data );
+      this.onDataUpdate( data );
     });
 
   }
@@ -98,7 +98,7 @@ export default class CopalMain extends React.Component {
   }
 
   onItemExecute( item ) {
-    this.backendData.ipcCommandSessions[this.currSessionID].pushIntoStream( "listitem-execute", { data: item, datatype: "listitem-title-url-icon" } );
+    this.backendData.ipcCommandSessions[this.currSessionID].pushIntoStream( "listitem-execute", item );
   }
 
   onInputExit() {
