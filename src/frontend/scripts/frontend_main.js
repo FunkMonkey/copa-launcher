@@ -18,8 +18,11 @@ currWindow.on( "blur", () => {
 window.addEventListener( "keydown", event => {
 	const key = keycode( event );
 
-	if( key === "esc" )
-		currWindow.hide( );
+	switch( key ) {
+		case "esc": currWindow.hide(); break;
+		case "f12": currWindow.toggleDevTools();
+	}
+
 } )
 
 
