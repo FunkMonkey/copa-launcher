@@ -80,8 +80,8 @@ export default {
    *
    * @param    {CommandSession}   commandSession
    */
-  createIPCSession( commandSessionData ) {
-    return new IPCCommandSession( commandSessionData );
+  createIPCSession( commandSession ) {
+    return new IPCCommandSession( commandSession );
   },
 
   /**
@@ -92,8 +92,8 @@ export default {
    *
    * @return   {Object}                            The IPC session
    */
-  getIPCSession( commandSessionData ) {
-    return GUISharedData.ipcCommandSessions[ commandSessionData.session.sessionID ];
+  getIPCSession( commandSession ) {
+    return GUISharedData.ipcCommandSessions[ commandSession.id ];
   },
 
   /**
@@ -102,15 +102,17 @@ export default {
    * @param    {CommandSession}   commandSession   CommandSession that is currently active
    * @param    {Object}           data             Data to display
    */
-  brickListView: function ( sessionData ) {
+  brickListView: function ( brickAndSessionData ) {
+
+    const session = brickAndSessionData.session;
 
     var waitForWindow = this.getOrCreateWindowPromise().then( () => {
-      if( !this.getIPCSession( sessionData ) )
-        this.createIPCSession( sessionData );
+      if( !this.getIPCSession( session ) )
+        this.createIPCSession( session );
     });
 
     var blockUntilTransform = new BlockUntilResolvedTransform( { objectMode: true, promise: waitForWindow } );
-    var toWebContents = new WebContentsWritable( { objectMode: true, getWindow: () => this.window, args: ["data-update", sessionData.session.sessionID] } );
+    var toWebContents = new WebContentsWritable( { objectMode: true, getWindow: () => this.window, args: ["data-update", session.id] } );
     blockUntilTransform.pipe( toWebContents );
 
     // returning the transform only, so multiple outputs can be piped
@@ -125,24 +127,26 @@ export default {
    *
    * @return   {Promise}                           Promise that resolves, when Input is ready
    */
-  brickInput: function ( sessionData ) {
-    var ipcSession = this.getIPCSession( sessionData );
+  brickInput: function ( brickAndSessionData ) {
+    const session = brickAndSessionData.session;
+
+    var ipcSession = this.getIPCSession( session );
     if( !ipcSession )
-      ipcSession = this.createIPCSession( sessionData );
+      ipcSession = this.createIPCSession( session );
 
     ipcSession._inputStream = new PassThrough( { objectMode: true } );
 
     const waitForWindow = this.getOrCreateWindowPromise().then( () => {
-      this.window.webContents.send( "command-changed", sessionData.session.sessionID, sessionData.session.commandConfig );
+      this.window.webContents.send( "command-changed", session.id, session.commandConfig );
       this.window.show();
     });
 
     // update input field via WebContentsWritable
     var blockUntilWindow = new BlockUntilResolvedTransform( { objectMode: true, promise: waitForWindow } );
-    var toWebContents = new WebContentsWritable( { objectMode: true, getWindow: () => this.window, args: ["input-update", sessionData.session.sessionID] } );
+    var toWebContents = new WebContentsWritable( { objectMode: true, getWindow: () => this.window, args: ["input-update", session.id] } );
     blockUntilWindow.pipe( toWebContents );
 
-    sessionData.session.getStream( "input" ).pipe( blockUntilWindow );
+    session.getStream( "input" ).pipe( blockUntilWindow );
 
     return ipcSession._inputStream;
   }
