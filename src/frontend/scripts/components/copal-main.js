@@ -27,6 +27,12 @@ export default class CopalMain extends React.Component {
       this.onCommandChange( commandConfig );
     } );
 
+    ipc.on( "error-update", ( sessionID, error ) => {
+      var newErr = new Error( error.message );
+      newErr.stack = error.stack;
+      console.error( newErr );
+    } );
+
     ipc.on( "input-update", ( sessionID, data ) => {
       if( sessionID !== this.currSessionID ) {
         console.error( "Debug: sessionID does not match sessionID of currrent command", this.currSessionID, sessionID );

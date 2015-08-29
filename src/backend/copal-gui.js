@@ -28,6 +28,7 @@ export default {
     this.settings = copal.defaultifyOptions( this.settings, DEFAULT_SETTINGS_GUI, true );
     global.copalGUISharedData.settings = this.settings;
 
+    copal.bricks.addErrorBrick( "GUI.printErrorToDevtools", this.brickPrintErrorToDevtools.bind( this ) );
     copal.bricks.addInputBrick( "GUI.input", this.brickInput.bind( this ) );
     copal.bricks.addOutputBrick( "GUI.list-view", this.brickListView.bind( this ) );
   },
@@ -149,6 +150,25 @@ export default {
     session.getStream( "input" ).pipe( blockUntilWindow );
 
     return ipcSession._inputStream;
+  },
+
+  brickPrintErrorToDevtools( brickMeta ) {
+
+    // TODO: open devtools, but not instantly
+    const waitForWindow = this.getOrCreateWindowPromise().then( () => {
+      //this.window.openDevTools();
+    });
+
+    // update input field via WebContentsWritable
+    const blockUntilWindow = new BlockUntilResolvedTransform( { objectMode: true, promise: waitForWindow } );
+    const transformError = through2.obj( (data, enc, done) => {
+      done( null, { message: data.message, stack: data.stack } );
+    });
+    const toWebContents = new WebContentsWritable( { objectMode: true, getWindow: () => this.window, args: ["error-update", ""] } );
+
+    blockUntilWindow.pipe( transformError ).pipe( toWebContents );
+
+    return blockUntilWindow;
   }
 
 };
