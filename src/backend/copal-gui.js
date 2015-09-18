@@ -1,5 +1,4 @@
 import DEFAULT_SETTINGS_GUI from "./default-settings-gui.json";
-import util from "util";
 import {PassThrough} from "stream";
 import through2 from "through2";
 
@@ -15,6 +14,11 @@ if( !global.copalGUISharedData )
 
 var GUISharedData = global.copalGUISharedData;
 
+// TODO
+// 1. Transform / PassThrough streams for all inputs and outputs
+// 2. On data from input-streams: create window, create IPC streams (have one main communication channel sending events back and forth)
+// 3. wait for client-side to be established and pipe into IPC streams
+
 export default {
 
   /**
@@ -29,8 +33,11 @@ export default {
     global.copalGUISharedData.settings = this.settings;
 
     copal.bricks.addErrorBrick( "GUI.printErrorToDevtools", this.brickPrintErrorToDevtools.bind( this ) );
+    copal.bricks.addInputBrick( "GUI.updateInputField", this.brickUpdateInputField.bind( this ) );
     copal.bricks.addInputBrick( "GUI.input", this.brickInput.bind( this ) );
     copal.bricks.addOutputBrick( "GUI.list-view", this.brickListView.bind( this ) );
+    copal.bricks.addOutputBrick( "GUI.list-item-execute", this.brickListExecuteItem.bind( this ) );
+
   },
 
   /**
@@ -103,7 +110,7 @@ export default {
    * @param    {CommandSession}   commandSession   CommandSession that is currently active
    * @param    {Object}           data             Data to display
    */
-  brickListView: function ( brickAndSessionData ) {
+  brickListView ( brickAndSessionData ) {
 
     const session = brickAndSessionData.session;
 
@@ -120,6 +127,10 @@ export default {
     return blockUntilTransform;
   },
 
+  brickListExecuteItem() {
+    return new PassThrough( { objectMode: true } );
+  },
+
   /**
    * Input brick
    *   - creates the GUI window if necessary
@@ -128,7 +139,7 @@ export default {
    *
    * @return   {Promise}                           Promise that resolves, when Input is ready
    */
-  brickInput: function ( brickAndSessionData ) {
+  brickInput ( brickAndSessionData ) {
     const session = brickAndSessionData.session;
 
     var ipcSession = this.getIPCSession( session );
@@ -137,8 +148,20 @@ export default {
 
     ipcSession._inputStream = new PassThrough( { objectMode: true } );
 
+    // session.getStream( "input" ).pipe( blockUntilWindow );
+
+    return ipcSession._inputStream;
+  },
+
+  brickUpdateInputField ( brickAndSessionData ) {
+    const session = brickAndSessionData.session;
+
+    var ipcSession = this.getIPCSession( session );
+    if( !ipcSession )
+      ipcSession = this.createIPCSession( session );
+
     const waitForWindow = this.getOrCreateWindowPromise().then( () => {
-      this.window.webContents.send( "command-changed", session.id, session.commandConfig );
+      this.window.webContents.send( "command-changed", session.id, session.commandSession.config );
       this.window.show();
     });
 
@@ -147,12 +170,10 @@ export default {
     var toWebContents = new WebContentsWritable( { objectMode: true, getWindow: () => this.window, args: ["input-update", session.id] } );
     blockUntilWindow.pipe( toWebContents );
 
-    session.getStream( "input" ).pipe( blockUntilWindow );
-
-    return ipcSession._inputStream;
+    return [ blockUntilWindow, toWebContents ];
   },
 
-  brickPrintErrorToDevtools( brickMeta ) {
+  brickPrintErrorToDevtools( ) {
 
     // TODO: open devtools, but not instantly
     const waitForWindow = this.getOrCreateWindowPromise().then( () => {
